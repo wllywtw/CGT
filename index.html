@@ -205,22 +205,11 @@
             if (!team1 || !team2) return null;
 
             return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative' },
-                // Top Bar
-                h('div', { className: 'absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10' },
-                    h('button', {
-                        onClick: loadData,
-                        className: 'bg-white bg-opacity-10 backdrop-blur-lg px-6 py-3 rounded-xl border border-white border-opacity-20 hover:bg-opacity-20 transition-all text-white font-semibold'
-                    }, '🔄 Reload Data'),
-                    h('button', {
-                        onClick: resetHistory,
-                        className: 'bg-red-500 bg-opacity-20 backdrop-blur-lg px-6 py-3 rounded-xl border border-red-500 border-opacity-50 hover:bg-opacity-30 transition-all text-red-300 font-semibold'
-                    }, 'Reset History')
-                ),
-                // Main Content - Centered Profiles
+                // Main Content - Horizontal Layout
                 h('div', { className: 'min-h-screen flex items-center justify-center p-8' },
-                    h('div', { className: 'max-w-md w-full space-y-6' },
+                    h('div', { className: 'flex items-center gap-6 max-w-5xl' },
                         // Team 1 Profile
-                        h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 text-center transform hover:scale-105 transition-all' },
+                        h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 text-center transform hover:scale-105 transition-all w-80' },
                             // Profile Picture
                             h('div', { className: 'w-40 h-40 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-2xl overflow-hidden' },
                                 team1.image ? 
@@ -255,16 +244,21 @@
                                 h('div', { className: 'space-y-2' },
                                     h('div', { className: 'text-3xl font-bold text-cyan-300 drop-shadow-lg' }, 'NO DATA'),
                                     h('div', { className: 'text-cyan-400 text-sm' }, 'Record matches to see predictions')
-                                )
+                                ),
+                            // Team 1 Winner Button
+                            h('button', {
+                                onClick: () => recordWinner(team1.name),
+                                className: 'mt-6 w-full py-3 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-blue-500 to-cyan-400 hover:opacity-90 hover:scale-105 transition-all shadow-xl'
+                            }, '🏆 Won')
                         ),
                         // VS Badge
-                        h('div', { className: 'flex justify-center' },
+                        h('div', { className: 'flex-shrink-0' },
                             h('div', { className: 'bg-gradient-to-r from-purple-500 to-pink-500 rounded-full w-24 h-24 flex items-center justify-center shadow-2xl border-4 border-white border-opacity-20' },
                                 h('span', { className: 'text-white text-3xl font-black' }, 'VS')
                             )
                         ),
                         // Team 2 Profile
-                        h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 text-center transform hover:scale-105 transition-all' },
+                        h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 text-center transform hover:scale-105 transition-all w-80' },
                             // Profile Picture
                             h('div', { className: 'w-40 h-40 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-500 to-rose-400 flex items-center justify-center shadow-2xl overflow-hidden' },
                                 team2.image ? 
@@ -299,18 +293,12 @@
                                 h('div', { className: 'space-y-2' },
                                     h('div', { className: 'text-3xl font-bold text-pink-300 drop-shadow-lg' }, 'NO DATA'),
                                     h('div', { className: 'text-pink-400 text-sm' }, 'Record matches to see predictions')
-                                )
-                        ),
-                        // Record Winner Buttons
-                        h('div', { className: 'grid grid-cols-2 gap-4 pt-4' },
-                            h('button', {
-                                onClick: () => recordWinner(team1.name),
-                                className: 'py-4 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-blue-500 to-cyan-400 hover:opacity-90 hover:scale-105 transition-all shadow-xl'
-                            }, '🏆 ' + team1.name),
+                                ),
+                            // Team 2 Winner Button
                             h('button', {
                                 onClick: () => recordWinner(team2.name),
-                                className: 'py-4 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-pink-500 to-rose-400 hover:opacity-90 hover:scale-105 transition-all shadow-xl'
-                            }, '🏆 ' + team2.name)
+                                className: 'mt-6 w-full py-3 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-pink-500 to-rose-400 hover:opacity-90 hover:scale-105 transition-all shadow-xl'
+                            }, '🏆 Won')
                         )
                     )
                 ),
