@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Team Win Predictor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -15,9 +15,14 @@
         }
     </style>
 </head>
-<body class="m-0 p-0 overflow-x-hidden">
+<body class="m-0 p-0 overflow-x-hidden bg-slate-950 text-slate-100">
     <div id="app"></div>
 
+    <!-- React and ReactDOM first -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- App code -->
     <script type="module">
         const { useState, useEffect, createElement: h } = React;
 
@@ -43,21 +48,16 @@
             const loadData = async () => {
                 setLoading(true);
                 setError(null);
-                
-                try {
-                    const historyData = localStorage.getItem('match-history');
-                    if (historyData) {
-                        setMatchHistory(JSON.parse(historyData));
-                    }
 
+                try {
                     const response = await fetch('./data.json');
-                    
+
                     if (!response.ok) {
                         throw new Error('data.json not found. Please create a data.json file in the same directory.');
                     }
 
                     const data = await response.json();
-                    
+
                     if (!data.team1 || !data.team2) {
                         throw new Error('Invalid JSON: Must contain team1 and team2');
                     }
@@ -65,20 +65,17 @@
                     setMatchData(data);
                     setTeam1(data.team1);
                     setTeam2(data.team2);
+
+                    // Match history is read-only from data.json (matches or matchHistory)
+                    const history = data.matches || data.matchHistory || [];
+                    setMatchHistory(Array.isArray(history) ? history : []);
+
                     setError(null);
                 } catch (err) {
                     setError(err.message);
                     console.error('Error loading data:', err);
                 } finally {
                     setLoading(false);
-                }
-            };
-
-            const saveMatchHistory = (history) => {
-                try {
-                    localStorage.setItem('match-history', JSON.stringify(history));
-                } catch (err) {
-                    console.error('Failed to save match history:', err);
                 }
             };
 
@@ -94,12 +91,14 @@
                 let team1Score = 0;
                 let team2Score = 0;
 
+                // Win rate weight: 40%
                 if (team1Stats.total > 0) {
                     const team1WinRate = (team1Stats.wins / team1Stats.total) * 100;
                     team1Score += team1WinRate * 0.4;
                 } else {
                     team1Score += 50 * 0.4;
                 }
+
                 if (team2Stats.total > 0) {
                     const team2WinRate = (team2Stats.wins / team2Stats.total) * 100;
                     team2Score += team2WinRate * 0.4;
@@ -107,11 +106,12 @@
                     team2Score += 50 * 0.4;
                 }
 
-                const h2h = matchHistory.filter(m => 
+                // Head-to-head weight: 30%
+                const h2h = matchHistory.filter(m =>
                     (m.team1 === team1.name && m.team2 === team2.name) ||
                     (m.team1 === team2.name && m.team2 === team1.name)
                 );
-                
+
                 if (h2h.length > 0) {
                     const team1H2HWins = h2h.filter(m => m.winner === team1.name).length;
                     const team2H2HWins = h2h.filter(m => m.winner === team2.name).length;
@@ -124,13 +124,14 @@
                     team2Score += 50 * 0.3;
                 }
 
+                // Player skills weight: 30%
                 if (team1.players && team1.players.length > 0) {
                     const team1Avg = team1.players.reduce((sum, p) => sum + (p.skill || 50), 0) / team1.players.length;
                     team1Score += team1Avg * 0.3;
                 } else {
                     team1Score += 50 * 0.3;
                 }
-                
+
                 if (team2.players && team2.players.length > 0) {
                     const team2Avg = team2.players.reduce((sum, p) => sum + (p.skill || 50), 0) / team2.players.length;
                     team2Score += team2Avg * 0.3;
@@ -153,174 +154,331 @@
 
             const getTeamStats = (teamName) => {
                 const wins = matchHistory.filter(m => m.winner === teamName).length;
-                const losses = matchHistory.filter(m => 
+                const losses = matchHistory.filter(m =>
                     (m.team1 === teamName || m.team2 === teamName) && m.winner !== teamName
                 ).length;
                 return { wins, losses, total: wins + losses };
             };
 
-            const recordWinner = (winnerName) => {
-                const newMatch = {
-                    team1: team1.name,
-                    team2: team2.name,
-                    winner: winnerName,
-                    date: new Date().toISOString()
-                };
-                
-                const newHistory = [newMatch, ...matchHistory];
-                setMatchHistory(newHistory);
-                saveMatchHistory(newHistory);
-            };
-
-            const resetHistory = () => {
-                if (confirm('Reset all match history?')) {
-                    setMatchHistory([]);
-                    localStorage.removeItem('match-history');
-                    setPredictions(null);
-                }
-            };
-
             if (loading) {
-                return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center' },
+                return h(
+                    'div',
+                    { className: 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center' },
                     h('div', { className: 'text-center' },
-                        h('div', { className: 'animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500 mx-auto mb-4' }),
-                        h('p', { className: 'text-white text-xl' }, 'Loading data.json...')
+                        h('div', { className: 'animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-violet-500 mx-auto mb-4' }),
+                        h('p', { className: 'text-slate-100 text-xl tracking-wide' }, 'Loading data.json...')
                     )
                 );
             }
 
             if (error) {
-                return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-8' },
-                    h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-12 border border-white border-opacity-20 max-w-2xl w-full text-center' },
-                        h('div', { className: 'text-red-400 text-6xl mb-6' }, '⚠️'),
-                        h('h1', { className: 'text-4xl font-bold text-white mb-4' }, 'Error Loading Data'),
+                return h(
+                    'div',
+                    { className: 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-8' },
+                    h('div', {
+                        className:
+                            'bg-slate-900/80 backdrop-blur-xl rounded-3xl p-10 border border-slate-700/70 max-w-xl w-full text-center shadow-2xl'
+                    },
+                        h('div', { className: 'text-red-400 text-5xl mb-4' }, '⚠️'),
+                        h('h1', { className: 'text-3xl font-bold text-slate-50 mb-2' }, 'Error Loading Data'),
+                        h('p', { className: 'text-slate-400 mb-6 text-sm' }, error),
                         h('button', {
                             onClick: loadData,
-                            className: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all'
-                        }, '🔄 Retry')
+                            className:
+                                'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white py-3 px-8 rounded-xl font-semibold text-sm tracking-wide hover:from-violet-600 hover:to-fuchsia-600 transition-all'
+                        }, 'Retry')
                     )
                 );
             }
 
             if (!team1 || !team2) return null;
 
-            return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative' },
+            return h(
+                'div',
+                { className: 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative' },
                 // Main Content - Horizontal Layout
-                h('div', { className: 'min-h-screen flex items-center justify-center p-8' },
-                    h('div', { className: 'flex items-center gap-6 max-w-5xl' },
-                        // Team 1 Profile
-                        h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 text-center transform hover:scale-105 transition-all w-80' },
+                h(
+                    'div',
+                    { className: 'min-h-screen flex items-center justify-center p-6' },
+                    h(
+                        'div',
+                        { className: 'flex items-stretch gap-8 max-w-6xl w-full' },
+                        // Team 1 Card
+                        h(
+                            'div',
+                            {
+                                className:
+                                    'flex-1 bg-slate-900/70 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/70 text-center ' +
+                                    'shadow-2xl hover:shadow-violet-900/40 transform hover:-translate-y-1 transition-all'
+                            },
                             // Profile Picture
-                            h('div', { className: 'w-40 h-40 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-2xl overflow-hidden' },
-                                team1.image ? 
-                                    h('img', { 
-                                        src: team1.image, 
+                            h(
+                                'div',
+                                {
+                                    className:
+                                        'w-32 h-32 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-violet-500 to-sky-500 ' +
+                                        'flex items-center justify-center shadow-2xl overflow-hidden border border-slate-800'
+                                },
+                                team1.image
+                                    ? h('img', {
+                                        src: team1.image,
                                         alt: team1.name,
                                         className: 'w-full h-full object-cover',
                                         onError: (e) => {
                                             e.target.style.display = 'none';
-                                            e.target.parentElement.innerHTML = '<span class="text-6xl">🏆</span>';
+                                            e.target.parentElement.innerHTML = '<span class="text-4xl text-white">🏆</span>';
                                         }
-                                    }) :
-                                    h('span', { className: 'text-6xl' }, '🏆')
+                                    })
+                                    : h('span', { className: 'text-4xl text-white' }, '🏆')
                             ),
                             // Team Name
-                            h('h2', { className: 'text-4xl font-black text-white drop-shadow-2xl mb-4 uppercase tracking-wider' }, team1.name),
+                            h(
+                                'h2',
+                                {
+                                    className:
+                                        'text-3xl font-extrabold text-slate-50 mb-2 tracking-[0.18em] uppercase'
+                                },
+                                team1.name
+                            ),
+                            h('p', { className: 'text-xs uppercase tracking-[0.25em] text-slate-500 mb-6' }, 'Team One'),
                             // Players
-                            team1.players && team1.players.length > 0 && h('div', { className: 'mb-6 space-y-2' },
-                                team1.players.map((player, idx) =>
-                                    h('div', { key: idx, className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-xl px-4 py-2 border border-white border-opacity-20' },
-                                        h('span', { className: 'text-white font-semibold' }, player.name),
-                                        player.skill && h('span', { className: 'ml-2 text-cyan-300 font-bold' }, player.skill)
+                            team1.players &&
+                                team1.players.length > 0 &&
+                                h(
+                                    'div',
+                                    { className: 'mb-6 space-y-2' },
+                                    team1.players.map((player, idx) =>
+                                        h(
+                                            'div',
+                                            {
+                                                key: idx,
+                                                className:
+                                                    'flex items-center justify-between bg-slate-900/80 rounded-xl px-4 py-2 ' +
+                                                    'border border-slate-700/80'
+                                            },
+                                            h('span', { className: 'text-sm text-slate-100 font-medium' }, player.name),
+                                            player.skill &&
+                                            h(
+                                                'span',
+                                                { className: 'ml-2 text-xs text-sky-300 font-semibold' },
+                                                'Skill: ' + player.skill
+                                            )
+                                        )
+                                    )
+                                ),
+                            // Prediction / Stats
+                            predictions
+                                ? h(
+                                    'div',
+                                    { className: 'space-y-3' },
+                                    h(
+                                        'div',
+                                        {
+                                            className:
+                                                'text-5xl font-black text-slate-50 animate-pulse tracking-tight'
+                                        },
+                                        predictions.team1Percentage + '%'
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'text-xs text-slate-400 uppercase tracking-[0.25em]' },
+                                        'Win Probability'
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'mt-2 text-sm text-sky-300 font-semibold' },
+                                        `${predictions.team1Stats.wins}W • ${predictions.team1Stats.losses}L`
                                     )
                                 )
-                            ),
-                            // Win Percentage or No Data
-                            predictions ? 
-                                h('div', { className: 'space-y-2' },
-                                    h('div', { className: 'text-6xl font-black text-white drop-shadow-2xl animate-pulse' }, predictions.team1Percentage + '%'),
-                                    h('div', { className: 'text-cyan-200 text-lg font-semibold' }, `${predictions.team1Stats.wins}W - ${predictions.team1Stats.losses}L`)
-                                ) :
-                                h('div', { className: 'space-y-2' },
-                                    h('div', { className: 'text-3xl font-bold text-cyan-300 drop-shadow-lg' }, 'NO DATA'),
-                                    h('div', { className: 'text-cyan-400 text-sm' }, 'Record matches to see predictions')
-                                ),
-                            // Team 1 Winner Button
-                            h('button', {
-                                onClick: () => recordWinner(team1.name),
-                                className: 'mt-6 w-full py-3 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-blue-500 to-cyan-400 hover:opacity-90 hover:scale-105 transition-all shadow-xl'
-                            }, '🏆 Won')
+                                : h(
+                                    'div',
+                                    { className: 'space-y-2' },
+                                    h(
+                                        'div',
+                                        { className: 'text-xl font-semibold text-sky-300' },
+                                        'No Data'
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'text-xs text-slate-500' },
+                                        'Add matches to your data.json to unlock predictions.'
+                                    )
+                                )
                         ),
+
                         // VS Badge
-                        h('div', { className: 'flex-shrink-0' },
-                            h('div', { className: 'bg-gradient-to-r from-purple-500 to-pink-500 rounded-full w-24 h-24 flex items-center justify-center shadow-2xl border-4 border-white border-opacity-20' },
-                                h('span', { className: 'text-white text-3xl font-black' }, 'VS')
+                        h(
+                            'div',
+                            { className: 'flex items-center justify-center' },
+                            h(
+                                'div',
+                                {
+                                    className:
+                                        'bg-slate-900/80 rounded-full w-24 h-24 flex items-center justify-center ' +
+                                        'shadow-[0_0_40px_rgba(139,92,246,0.5)] border border-violet-500/60'
+                                },
+                                h(
+                                    'span',
+                                    { className: 'text-slate-50 text-3xl font-black tracking-[0.3em]' },
+                                    'VS'
+                                )
                             )
                         ),
-                        // Team 2 Profile
-                        h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-8 border border-white border-opacity-20 text-center transform hover:scale-105 transition-all w-80' },
+
+                        // Team 2 Card
+                        h(
+                            'div',
+                            {
+                                className:
+                                    'flex-1 bg-slate-900/70 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/70 text-center ' +
+                                    'shadow-2xl hover:shadow-fuchsia-900/40 transform hover:-translate-y-1 transition-all'
+                            },
                             // Profile Picture
-                            h('div', { className: 'w-40 h-40 mx-auto mb-6 rounded-full bg-gradient-to-br from-pink-500 to-rose-400 flex items-center justify-center shadow-2xl overflow-hidden' },
-                                team2.image ? 
-                                    h('img', { 
-                                        src: team2.image, 
+                            h(
+                                'div',
+                                {
+                                    className:
+                                        'w-32 h-32 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-fuchsia-500 to-rose-500 ' +
+                                        'flex items-center justify-center shadow-2xl overflow-hidden border border-slate-800'
+                                },
+                                team2.image
+                                    ? h('img', {
+                                        src: team2.image,
                                         alt: team2.name,
                                         className: 'w-full h-full object-cover',
                                         onError: (e) => {
                                             e.target.style.display = 'none';
-                                            e.target.parentElement.innerHTML = '<span class="text-6xl">🏆</span>';
+                                            e.target.parentElement.innerHTML = '<span class="text-4xl text-white">🏆</span>';
                                         }
-                                    }) :
-                                    h('span', { className: 'text-6xl' }, '🏆')
+                                    })
+                                    : h('span', { className: 'text-4xl text-white' }, '🏆')
                             ),
                             // Team Name
-                            h('h2', { className: 'text-4xl font-black text-white drop-shadow-2xl mb-4 uppercase tracking-wider' }, team2.name),
+                            h(
+                                'h2',
+                                {
+                                    className:
+                                        'text-3xl font-extrabold text-slate-50 mb-2 tracking-[0.18em] uppercase'
+                                },
+                                team2.name
+                            ),
+                            h('p', { className: 'text-xs uppercase tracking-[0.25em] text-slate-500 mb-6' }, 'Team Two'),
                             // Players
-                            team2.players && team2.players.length > 0 && h('div', { className: 'mb-6 space-y-2' },
-                                team2.players.map((player, idx) =>
-                                    h('div', { key: idx, className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-xl px-4 py-2 border border-white border-opacity-20' },
-                                        h('span', { className: 'text-white font-semibold' }, player.name),
-                                        player.skill && h('span', { className: 'ml-2 text-pink-300 font-bold' }, player.skill)
+                            team2.players &&
+                                team2.players.length > 0 &&
+                                h(
+                                    'div',
+                                    { className: 'mb-6 space-y-2' },
+                                    team2.players.map((player, idx) =>
+                                        h(
+                                            'div',
+                                            {
+                                                key: idx,
+                                                className:
+                                                    'flex items-center justify-between bg-slate-900/80 rounded-xl px-4 py-2 ' +
+                                                    'border border-slate-700/80'
+                                            },
+                                            h('span', { className: 'text-sm text-slate-100 font-medium' }, player.name),
+                                            player.skill &&
+                                            h(
+                                                'span',
+                                                { className: 'ml-2 text-xs text-fuchsia-300 font-semibold' },
+                                                'Skill: ' + player.skill
+                                            )
+                                        )
+                                    )
+                                ),
+                            // Prediction / Stats
+                            predictions
+                                ? h(
+                                    'div',
+                                    { className: 'space-y-3' },
+                                    h(
+                                        'div',
+                                        {
+                                            className:
+                                                'text-5xl font-black text-slate-50 animate-pulse tracking-tight'
+                                        },
+                                        predictions.team2Percentage + '%'
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'text-xs text-slate-400 uppercase tracking-[0.25em]' },
+                                        'Win Probability'
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'mt-2 text-sm text-fuchsia-300 font-semibold' },
+                                        `${predictions.team2Stats.wins}W • ${predictions.team2Stats.losses}L`
                                     )
                                 )
-                            ),
-                            // Win Percentage or No Data
-                            predictions ? 
-                                h('div', { className: 'space-y-2' },
-                                    h('div', { className: 'text-6xl font-black text-white drop-shadow-2xl animate-pulse' }, predictions.team2Percentage + '%'),
-                                    h('div', { className: 'text-pink-200 text-lg font-semibold' }, `${predictions.team2Stats.wins}W - ${predictions.team2Stats.losses}L`)
-                                ) :
-                                h('div', { className: 'space-y-2' },
-                                    h('div', { className: 'text-3xl font-bold text-pink-300 drop-shadow-lg' }, 'NO DATA'),
-                                    h('div', { className: 'text-pink-400 text-sm' }, 'Record matches to see predictions')
-                                ),
-                            // Team 2 Winner Button
-                            h('button', {
-                                onClick: () => recordWinner(team2.name),
-                                className: 'mt-6 w-full py-3 rounded-xl font-bold text-lg text-white bg-gradient-to-r from-pink-500 to-rose-400 hover:opacity-90 hover:scale-105 transition-all shadow-xl'
-                            }, '🏆 Won')
+                                : h(
+                                    'div',
+                                    { className: 'space-y-2' },
+                                    h(
+                                        'div',
+                                        { className: 'text-xl font-semibold text-fuchsia-300' },
+                                        'No Data'
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'text-xs text-slate-500' },
+                                        'Add matches to your data.json to unlock predictions.'
+                                    )
+                                )
                         )
                     )
                 ),
-                // Stats Sidebar
-                matchHistory.length > 0 && h('div', { className: 'absolute right-8 top-24 bottom-24 w-80 bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20 overflow-y-auto' },
-                    h('h3', { className: 'text-white font-bold text-xl mb-4' }, '📊 Match History'),
-                    h('div', { className: 'space-y-3' },
-                        matchHistory.slice(0, 20).map((match, idx) =>
-                            h('div', { key: idx, className: 'bg-white bg-opacity-10 rounded-lg p-3 border border-white border-opacity-20' },
-                                h('div', { className: 'text-white text-sm font-semibold mb-1' }, `${match.team1} vs ${match.team2}`),
-                                h('div', { className: 'text-green-400 text-xs font-bold' }, `Winner: ${match.winner}`)
+
+                // Match History Sidebar (read-only)
+                matchHistory.length > 0 &&
+                    h(
+                        'div',
+                        {
+                            className:
+                                'absolute right-6 top-10 bottom-10 w-80 bg-slate-900/80 backdrop-blur-xl ' +
+                                'rounded-2xl p-5 border border-slate-700/70 overflow-y-auto shadow-2xl'
+                        },
+                        h('h3', { className: 'text-slate-50 font-semibold text-lg mb-3 tracking-wide' }, 'Match History'),
+                        h('p', { className: 'text-[0.7rem] text-slate-500 mb-4 uppercase tracking-[0.22em]' },
+                            'Data loaded from data.json'
+                        ),
+                        h(
+                            'div',
+                            { className: 'space-y-3' },
+                            matchHistory.slice(0, 40).map((match, idx) =>
+                                h(
+                                    'div',
+                                    {
+                                        key: idx,
+                                        className:
+                                            'bg-slate-900 rounded-xl p-3 border border-slate-700/80 flex flex-col gap-1'
+                                    },
+                                    h(
+                                        'div',
+                                        { className: 'text-xs text-slate-400' },
+                                        `${match.team1} vs ${match.team2}`
+                                    ),
+                                    h(
+                                        'div',
+                                        { className: 'text-xs font-semibold text-emerald-400' },
+                                        `Winner: ${match.winner}`
+                                    ),
+                                    match.date &&
+                                        h(
+                                            'div',
+                                            { className: 'text-[0.65rem] text-slate-500' },
+                                            new Date(match.date).toLocaleString()
+                                        )
+                                )
                             )
                         )
                     )
-                )
             );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('app'));
         root.render(React.createElement(TeamPredictor));
     </script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 </body>
 </html>
