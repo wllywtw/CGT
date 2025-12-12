@@ -3,622 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Leaderboard</title>
+    <title>Team Win Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: #0f172a;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-
-        h1 {
-            color: #f8fafc;
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
-        }
-
-        .subtitle {
-            color: #94a3b8;
-            font-size: 1em;
-            font-weight: 400;
-        }
-
-        .leaderboard {
-            background: #1e293b;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        .leaderboard-header {
-            display: grid;
-            grid-template-columns: 80px 1fr 120px;
-            padding: 20px 30px;
-            background: #334155;
-            border-bottom: 1px solid #475569;
-            font-weight: 600;
-            color: #cbd5e1;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .player-row {
-            display: grid;
-            grid-template-columns: 80px 1fr 120px;
-            padding: 25px 30px;
-            align-items: center;
-            border-bottom: 1px solid #334155;
-            transition: all 0.3s ease;
-            animation: fadeIn 0.5s ease forwards;
-            opacity: 0;
-        }
-
-        .player-row:hover {
-            background: #2d3748;
-            transform: translateX(5px);
-        }
-
-        .player-row:nth-child(2) { animation-delay: 0.1s; }
-        .player-row:nth-child(3) { animation-delay: 0.2s; }
-        .player-row:nth-child(4) { animation-delay: 0.3s; }
-        .player-row:nth-child(5) { animation-delay: 0.4s; }
-        .player-row:nth-child(6) { animation-delay: 0.5s; }
-        .player-row:nth-child(7) { animation-delay: 0.6s; }
-        .player-row:nth-child(8) { animation-delay: 0.7s; }
-        .player-row:nth-child(9) { animation-delay: 0.8s; }
-        .player-row:nth-child(10) { animation-delay: 0.9s; }
-
-        .rank {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .rank-number {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.2em;
-            border-radius: 8px;
-        }
-
-        .player-row:nth-child(2) .rank-number {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #1e293b;
-        }
-
-        .player-row:nth-child(3) .rank-number {
-            background: linear-gradient(135deg, #e5e7eb, #9ca3af);
-            color: #1e293b;
-        }
-
-        .player-row:nth-child(4) .rank-number {
-            background: linear-gradient(135deg, #d97706, #92400e);
-            color: #fff;
-        }
-
-        .player-row:nth-child(n+5) .rank-number {
-            background: #334155;
-            color: #94a3b8;
-        }
-
-        .player-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .player-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-
-        .player-name {
-            color: #f8fafc;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .player-name:hover {
-            color: #6366f1;
-            text-decoration: underline;
-        }
-
-        .player-score {
-            text-align: right;
-            color: #f8fafc;
-            font-size: 1.3em;
-            font-weight: 700;
-        }
-
-        .score-change {
-            font-size: 0.75em;
-            color: #10b981;
-            margin-top: 3px;
-        }
-
-        .profile-view {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .profile-view.active {
-            display: block;
-        }
-
-        .back-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #334155;
-            color: #f8fafc;
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 30px;
-        }
-
-        .back-button:hover {
-            background: #475569;
-            transform: translateX(-5px);
-        }
-
-        .profile-card {
-            background: #1e293b;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        .profile-header {
-            display: flex;
-            align-items: center;
-            gap: 30px;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #334155;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 3em;
-        }
-
-        .profile-info h2 {
-            color: #f8fafc;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .profile-rank {
-            color: #94a3b8;
-            font-size: 1.2em;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: #334155;
-            padding: 25px;
-            border-radius: 12px;
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-label {
-            color: #94a3b8;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            color: #f8fafc;
-            font-size: 2em;
-            font-weight: 700;
-        }
-
-        .achievements {
-            margin-top: 30px;
-        }
-
-        .achievements h3 {
-            color: #f8fafc;
-            font-size: 1.5em;
-            margin-bottom: 20px;
-        }
-
-        .achievement-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
-        }
-
-        .achievement-item {
-            background: #334155;
-            padding: 20px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .achievement-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5em;
-        }
-
-        .achievement-text h4 {
-            color: #f8fafc;
-            font-size: 1em;
-            margin-bottom: 5px;
-        }
-
-        .achievement-text p {
-            color: #94a3b8;
-            font-size: 0.85em;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .leaderboard-header,
-            .player-row {
-                grid-template-columns: 60px 1fr 100px;
-                padding: 20px 15px;
-            }
-
-            h1 {
-                font-size: 2em;
-            }
-
-            .player-name {
-                font-size: 1em;
-            }
-
-            .player-score {
-                font-size: 1.1em;
-            }
-
-            .rank-number {
-                width: 35px;
-                height: 35px;
-                font-size: 1em;
-            }
-
-            .player-avatar {
-                width: 40px;
-                height: 40px;
-            }
-
-            .profile-header {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .profile-info h2 {
-                font-size: 2em;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div id="leaderboard-view">
-            <header>
-                <h1>Leaderboard</h1>
-                <p class="subtitle">Global Rankings - Season 2024</p>
-            </header>
+<body class="m-0 p-0 overflow-x-hidden">
+    <div id="app"></div>
 
-            <div class="leaderboard">
-                <div class="leaderboard-header">
-                    <div>Rank</div>
-                    <div>Player</div>
-                    <div>Score</div>
-                </div>
+    <script type="module">
+        const { useState, useEffect, createElement: h } = React;
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">1</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">AM</div>
-                        <div class="player-name" onclick="showProfile('Alex Morgan', 'AM', 1, 9750, 145)">Alex Morgan</div>
-                    </div>
-                    <div class="player-score">
-                        9,750
-                        <div class="score-change">↑ 145</div>
-                    </div>
-                </div>
+        function TeamPredictor() {
+            const [matchData, setMatchData] = useState(null);
+            const [team1, setTeam1] = useState(null);
+            const [team2, setTeam2] = useState(null);
+            const [predictions, setPredictions] = useState(null);
+            const [matchHistory, setMatchHistory] = useState([]);
+            const [error, setError] = useState(null);
+            const [loading, setLoading] = useState(true);
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">2</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">SC</div>
-                        <div class="player-name" onclick="showProfile('Sarah Chen', 'SC', 2, 8420, 89)">Sarah Chen</div>
-                    </div>
-                    <div class="player-score">
-                        8,420
-                        <div class="score-change">↑ 89</div>
-                    </div>
-                </div>
+            useEffect(() => {
+                loadData();
+            }, []);
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">3</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">MR</div>
-                        <div class="player-name" onclick="showProfile('Mike Rodriguez', 'MR', 3, 7890, 67)">Mike Rodriguez</div>
-                    </div>
-                    <div class="player-score">
-                        7,890
-                        <div class="score-change">↑ 67</div>
-                    </div>
-                </div>
+            useEffect(() => {
+                if (team1 && team2 && matchHistory.length > 0) {
+                    calculatePredictions();
+                }
+            }, [team1, team2, matchHistory]);
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">4</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">EJ</div>
-                        <div class="player-name" onclick="showProfile('Emily Johnson', 'EJ', 4, 7245, 52)">Emily Johnson</div>
-                    </div>
-                    <div class="player-score">
-                        7,245
-                        <div class="score-change">↑ 52</div>
-                    </div>
-                </div>
+            const loadData = async () => {
+                setLoading(true);
+                setError(null);
+                
+                try {
+                    const historyData = localStorage.getItem('match-history');
+                    if (historyData) {
+                        setMatchHistory(JSON.parse(historyData));
+                    }
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">5</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">DK</div>
-                        <div class="player-name" onclick="showProfile('David Kim', 'DK', 5, 6980, 34)">David Kim</div>
-                    </div>
-                    <div class="player-score">
-                        6,980
-                        <div class="score-change">↑ 34</div>
-                    </div>
-                </div>
+                    const response = await fetch('./data.json');
+                    
+                    if (!response.ok) {
+                        throw new Error('data.json not found. Please create a data.json file in the same directory.');
+                    }
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">6</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">LP</div>
-                        <div class="player-name" onclick="showProfile('Lisa Patel', 'LP', 6, 6720, 28)">Lisa Patel</div>
-                    </div>
-                    <div class="player-score">
-                        6,720
-                        <div class="score-change">↑ 28</div>
-                    </div>
-                </div>
+                    const data = await response.json();
+                    
+                    if (!data.team1 || !data.team2) {
+                        throw new Error('Invalid JSON: Must contain team1 and team2');
+                    }
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">7</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">JW</div>
-                        <div class="player-name" onclick="showProfile('James Wilson', 'JW', 7, 6430, 19)">James Wilson</div>
-                    </div>
-                    <div class="player-score">
-                        6,430
-                        <div class="score-change">↑ 19</div>
-                    </div>
-                </div>
+                    setMatchData(data);
+                    setTeam1(data.team1);
+                    setTeam2(data.team2);
+                    setError(null);
+                } catch (err) {
+                    setError(err.message);
+                    console.error('Error loading data:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">8</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">MT</div>
-                        <div class="player-name" onclick="showProfile('Maria Torres', 'MT', 8, 6180, 15)">Maria Torres</div>
-                    </div>
-                    <div class="player-score">
-                        6,180
-                        <div class="score-change">↑ 15</div>
-                    </div>
-                </div>
+            const saveMatchHistory = (history) => {
+                try {
+                    localStorage.setItem('match-history', JSON.stringify(history));
+                } catch (err) {
+                    console.error('Failed to save match history:', err);
+                }
+            };
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">9</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">RB</div>
-                        <div class="player-name" onclick="showProfile('Robert Brown', 'RB', 9, 5920, 11)">Robert Brown</div>
-                    </div>
-                    <div class="player-score">
-                        5,920
-                        <div class="score-change">↑ 11</div>
-                    </div>
-                </div>
+            const calculatePredictions = () => {
+                const team1Stats = getTeamStats(team1.name);
+                const team2Stats = getTeamStats(team2.name);
 
-                <div class="player-row">
-                    <div class="rank">
-                        <div class="rank-number">10</div>
-                    </div>
-                    <div class="player-info">
-                        <div class="player-avatar">AN</div>
-                        <div class="player-name" onclick="showProfile('Anna Novak', 'AN', 10, 5650, 8)">Anna Novak</div>
-                    </div>
-                    <div class="player-score">
-                        5,650
-                        <div class="score-change">↑ 8</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                if (team1Stats.total === 0 && team2Stats.total === 0) {
+                    setPredictions(null);
+                    return;
+                }
 
-        <div id="profile-view" class="profile-view">
-            <button class="back-button" onclick="showLeaderboard()">
-                ← Back to Leaderboard
-            </button>
+                let team1Score = 0;
+                let team2Score = 0;
 
-            <div class="profile-card">
-                <div class="profile-header">
-                    <div class="profile-avatar" id="profile-avatar">AM</div>
-                    <div class="profile-info">
-                        <h2 id="profile-name">Alex Morgan</h2>
-                        <p class="profile-rank" id="profile-rank">Rank #1 • Global Rankings</p>
-                    </div>
-                </div>
+                if (team1Stats.total > 0) {
+                    const team1WinRate = (team1Stats.wins / team1Stats.total) * 100;
+                    team1Score += team1WinRate * 0.4;
+                } else {
+                    team1Score += 50 * 0.4;
+                }
+                if (team2Stats.total > 0) {
+                    const team2WinRate = (team2Stats.wins / team2Stats.total) * 100;
+                    team2Score += team2WinRate * 0.4;
+                } else {
+                    team2Score += 50 * 0.4;
+                }
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Score</div>
-                        <div class="stat-value" id="profile-score">9,750</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Recent Gain</div>
-                        <div class="stat-value" id="profile-gain">+145</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Games Played</div>
-                        <div class="stat-value">342</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Win Rate</div>
-                        <div class="stat-value">78%</div>
-                    </div>
-                </div>
+                const h2h = matchHistory.filter(m => 
+                    (m.team1 === team1.name && m.team2 === team2.name) ||
+                    (m.team1 === team2.name && m.team2 === team1.name)
+                );
+                
+                if (h2h.length > 0) {
+                    const team1H2HWins = h2h.filter(m => m.winner === team1.name).length;
+                    const team2H2HWins = h2h.filter(m => m.winner === team2.name).length;
+                    const team1H2HRate = (team1H2HWins / h2h.length) * 100;
+                    const team2H2HRate = (team2H2HWins / h2h.length) * 100;
+                    team1Score += team1H2HRate * 0.3;
+                    team2Score += team2H2HRate * 0.3;
+                } else {
+                    team1Score += 50 * 0.3;
+                    team2Score += 50 * 0.3;
+                }
 
-                <div class="achievements">
-                    <h3>Achievements</h3>
-                    <div class="achievement-list">
-                        <div class="achievement-item">
-                            <div class="achievement-icon">★</div>
-                            <div class="achievement-text">
-                                <h4>Top Player</h4>
-                                <p>Reached #1 on the leaderboard</p>
-                            </div>
-                        </div>
-                        <div class="achievement-item">
-                            <div class="achievement-icon">🔥</div>
-                            <div class="achievement-text">
-                                <h4>Hot Streak</h4>
-                                <p>Won 10 games in a row</p>
-                            </div>
-                        </div>
-                        <div class="achievement-item">
-                            <div class="achievement-icon">💯</div>
-                            <div class="achievement-text">
-                                <h4>Centurion</h4>
-                                <p>Played 100+ games</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                if (team1.players && team1.players.length > 0) {
+                    const team1Avg = team1.players.reduce((sum, p) => sum + (p.skill || 50), 0) / team1.players.length;
+                    team1Score += team1Avg * 0.3;
+                } else {
+                    team1Score += 50 * 0.3;
+                }
+                
+                if (team2.players && team2.players.length > 0) {
+                    const team2Avg = team2.players.reduce((sum, p) => sum + (p.skill || 50), 0) / team2.players.length;
+                    team2Score += team2Avg * 0.3;
+                } else {
+                    team2Score += 50 * 0.3;
+                }
 
-    <script>
-        function showProfile(name, initials, rank, score, gain) {
-            document.getElementById('leaderboard-view').classList.add('hidden');
-            document.getElementById('profile-view').classList.add('active');
-            
-            document.getElementById('profile-name').textContent = name;
-            document.getElementById('profile-avatar').textContent = initials;
-            document.getElementById('profile-rank').textContent = `Rank #${rank} • Global Rankings`;
-            document.getElementById('profile-score').textContent = score.toLocaleString();
-            document.getElementById('profile-gain').textContent = `+${gain}`;
-            
-            window.scrollTo(0, 0);
+                const total = team1Score + team2Score;
+                const team1Percentage = Math.round((team1Score / total) * 100);
+                const team2Percentage = Math.round((team2Score / total) * 100);
+
+                setPredictions({
+                    team1Percentage,
+                    team2Percentage,
+                    team1Stats,
+                    team2Stats,
+                    headToHead: h2h.length
+                });
+            };
+
+            const getTeamStats = (teamName) => {
+                const wins = matchHistory.filter(m => m.winner === teamName).length;
+                const losses = matchHistory.filter(m => 
+                    (m.team1 === teamName || m.team2 === teamName) && m.winner !== teamName
+                ).length;
+                return { wins, losses, total: wins + losses };
+            };
+
+            const recordWinner = (winnerName) => {
+                const newMatch = {
+                    team1: team1.name,
+                    team2: team2.name,
+                    winner: winnerName,
+                    date: new Date().toISOString()
+                };
+                
+                const newHistory = [newMatch, ...matchHistory];
+                setMatchHistory(newHistory);
+                saveMatchHistory(newHistory);
+            };
+
+            const resetHistory = () => {
+                if (confirm('Reset all match history?')) {
+                    setMatchHistory([]);
+                    localStorage.removeItem('match-history');
+                    setPredictions(null);
+                }
+            };
+
+            if (loading) {
+                return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center' },
+                    h('div', { className: 'text-center' },
+                        h('div', { className: 'animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500 mx-auto mb-4' }),
+                        h('p', { className: 'text-white text-xl' }, 'Loading data.json...')
+                    )
+                );
+            }
+
+            if (error) {
+                return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-8' },
+                    h('div', { className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-3xl p-12 border border-white border-opacity-20 max-w-2xl w-full text-center' },
+                        h('div', { className: 'text-red-400 text-6xl mb-6' }, '⚠️'),
+                        h('h1', { className: 'text-4xl font-bold text-white mb-4' }, 'Error Loading Data'),
+                        h('button', {
+                            onClick: loadData,
+                            className: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-8 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-all'
+                        }, '🔄 Retry')
+                    )
+                );
+            }
+
+            if (!team1 || !team2) return null;
+
+            return h('div', { className: 'min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative' },
+                // Top Bar
+                h('div', { className: 'absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10' },
+                    h('button', {
+                        onClick: loadData,
+                        className: 'bg-white bg-opacity-10 backdrop-blur-lg px-6 py-3 rounded-xl border border-white border-opacity-20 hover:bg-opacity-20 transition-all text-white font-semibold'
+                    }, '🔄 Reload Data'),
+                    h('button', {
+                        onClick: resetHistory,
+                        className: 'bg-red-500 bg-opacity-20 backdrop-blur-lg px-6 py-3 rounded-xl border border-red-500 border-opacity-50 hover:bg-opacity-30 transition-all text-red-300 font-semibold'
+                    }, 'Reset History')
+                ),
+                // Main Content
+                h('div', { className: 'min-h-screen flex flex-col' },
+                    // Team 1 - Top Half
+                    h('div', { className: 'flex-1 flex items-center justify-center p-12 border-b-4 border-white border-opacity-20 relative overflow-hidden' },
+                        h('div', { className: 'absolute inset-0 bg-gradient-to-br from-blue-900 from-opacity-30 to-cyan-900 to-opacity-30' }),
+                        h('div', { className: 'relative z-10 text-center' },
+                            // Profile Picture
+                            h('div', { className: 'w-64 h-64 mx-auto mb-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-2xl overflow-hidden' },
+                                team1.image ? 
+                                    h('img', { 
+                                        src: team1.image, 
+                                        alt: team1.name,
+                                        className: 'w-full h-full object-cover',
+                                        onError: (e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.parentElement.innerHTML = '<span class="text-8xl">🏆</span>';
+                                        }
+                                    }) :
+                                    h('span', { className: 'text-8xl' }, '🏆')
+                            ),
+                            // Team Name
+                            h('h2', { className: 'text-6xl font-black text-white drop-shadow-2xl mb-8 uppercase tracking-wider' }, team1.name),
+                            // Players
+                            team1.players && team1.players.length > 0 && h('div', { className: 'mb-8 space-y-3' },
+                                team1.players.map((player, idx) =>
+                                    h('div', { key: idx, className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-xl px-6 py-3 inline-block mx-2 border border-white border-opacity-20' },
+                                        h('span', { className: 'text-white font-semibold text-lg' }, player.name),
+                                        player.skill && h('span', { className: 'ml-3 text-cyan-300 font-bold' }, player.skill)
+                                    )
+                                )
+                            ),
+                            // Win Percentage or No Data
+                            predictions ? 
+                                h('div', { className: 'space-y-4' },
+                                    h('div', { className: 'text-9xl font-black text-white drop-shadow-2xl animate-pulse' }, predictions.team1Percentage + '%'),
+                                    h('div', { className: 'text-cyan-200 text-2xl font-semibold' }, `${predictions.team1Stats.wins}W - ${predictions.team1Stats.losses}L`),
+                                    predictions.headToHead > 0 && h('div', { className: 'text-cyan-300 text-lg' }, `${predictions.headToHead} head-to-head matches`)
+                                ) :
+                                h('div', { className: 'space-y-4' },
+                                    h('div', { className: 'text-5xl font-bold text-cyan-300 drop-shadow-lg' }, 'NO DATA'),
+                                    h('div', { className: 'text-cyan-400 text-xl' }, 'Record matches to see predictions')
+                                )
+                        )
+                    ),
+                    // VS Divider
+                    h('div', { className: 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20' },
+                        h('div', { className: 'bg-gradient-to-r from-purple-500 to-pink-500 rounded-full w-32 h-32 flex items-center justify-center shadow-2xl border-4 border-white border-opacity-20' },
+                            h('span', { className: 'text-white text-4xl font-black' }, 'VS')
+                        )
+                    ),
+                    // Team 2 - Bottom Half
+                    h('div', { className: 'flex-1 flex items-center justify-center p-12 relative overflow-hidden' },
+                        h('div', { className: 'absolute inset-0 bg-gradient-to-br from-pink-900 from-opacity-30 to-rose-900 to-opacity-30' }),
+                        h('div', { className: 'relative z-10 text-center' },
+                            // Win Percentage or No Data
+                            predictions ? 
+                                h('div', { className: 'space-y-4 mb-8' },
+                                    h('div', { className: 'text-9xl font-black text-white drop-shadow-2xl animate-pulse' }, predictions.team2Percentage + '%'),
+                                    h('div', { className: 'text-pink-200 text-2xl font-semibold' }, `${predictions.team2Stats.wins}W - ${predictions.team2Stats.losses}L`)
+                                ) :
+                                h('div', { className: 'space-y-4 mb-8' },
+                                    h('div', { className: 'text-5xl font-bold text-pink-300 drop-shadow-lg' }, 'NO DATA'),
+                                    h('div', { className: 'text-pink-400 text-xl' }, 'Record matches to see predictions')
+                                ),
+                            // Players
+                            team2.players && team2.players.length > 0 && h('div', { className: 'mb-8 space-y-3' },
+                                team2.players.map((player, idx) =>
+                                    h('div', { key: idx, className: 'bg-white bg-opacity-10 backdrop-blur-lg rounded-xl px-6 py-3 inline-block mx-2 border border-white border-opacity-20' },
+                                        h('span', { className: 'text-white font-semibold text-lg' }, player.name),
+                                        player.skill && h('span', { className: 'ml-3 text-pink-300 font-bold' }, player.skill)
+                                    )
+                                )
+                            ),
+                            // Team Name
+                            h('h2', { className: 'text-6xl font-black text-white drop-shadow-2xl mb-8 uppercase tracking-wider' }, team2.name),
+                            // Profile Picture
+                            h('div', { className: 'w-64 h-64 mx-auto rounded-full bg-gradient-to-br from-pink-500 to-rose-400 flex items-center justify-center shadow-2xl overflow-hidden' },
+                                team2.image ? 
+                                    h('img', { 
+                                        src: team2.image, 
+                                        alt: team2.name,
+                                        className: 'w-full h-full object-cover',
+                                        onError: (e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.parentElement.innerHTML = '<span class="text-8xl">🏆</span>';
+                                        }
+                                    }) :
+                                    h('span', { className: 'text-8xl' }, '🏆')
+                            )
+                        )
+                    )
+                ),
+                // Record Winner Buttons
+                h('div', { className: 'absolute bottom-8 left-8 right-8 grid grid-cols-2 gap-6 z-20' },
+                    h('button', {
+                        onClick: () => recordWinner(team1.name),
+                        className: 'py-6 rounded-2xl font-bold text-2xl text-white bg-gradient-to-r from-blue-500 to-cyan-400 hover:opacity-90 hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-3'
+                    }, '🏆 ' + team1.name + ' Won'),
+                    h('button', {
+                        onClick: () => recordWinner(team2.name),
+                        className: 'py-6 rounded-2xl font-bold text-2xl text-white bg-gradient-to-r from-pink-500 to-rose-400 hover:opacity-90 hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-3'
+                    }, '🏆 ' + team2.name + ' Won')
+                ),
+                // Stats Sidebar
+                matchHistory.length > 0 && h('div', { className: 'absolute right-8 top-24 bottom-24 w-80 bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-6 border border-white border-opacity-20 overflow-y-auto' },
+                    h('h3', { className: 'text-white font-bold text-xl mb-4' }, '📊 Match History'),
+                    h('div', { className: 'space-y-3' },
+                        matchHistory.slice(0, 20).map((match, idx) =>
+                            h('div', { key: idx, className: 'bg-white bg-opacity-10 rounded-lg p-3 border border-white border-opacity-20' },
+                                h('div', { className: 'text-white text-sm font-semibold mb-1' }, `${match.team1} vs ${match.team2}`),
+                                h('div', { className: 'text-green-400 text-xs font-bold' }, `Winner: ${match.winner}`)
+                            )
+                        )
+                    )
+                )
+            );
         }
 
-        function showLeaderboard() {
-            document.getElementById('profile-view').classList.remove('active');
-            document.getElementById('leaderboard-view').classList.remove('hidden');
-            
-            window.scrollTo(0, 0);
-        }
+        const root = ReactDOM.createRoot(document.getElementById('app'));
+        root.render(React.createElement(TeamPredictor));
     </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 </body>
 </html>
