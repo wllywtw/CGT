@@ -1,0 +1,18 @@
+{
+  "team1": {
+    "name": "hhh",
+    "image": "hhhpfp.png",
+    "players": [
+      { "name": "Player1", "skill": 85 },
+      { "name": "Player2", "skill": 78 }
+    ]
+  },
+  "team2": {
+    "name": "ttt",
+    "image": "image2.png",
+    "players": [
+      { "name": "Player3", "skill": 82 },
+      { "name": "Player4", "skill": 90 }
+    ]
+  }
+}
